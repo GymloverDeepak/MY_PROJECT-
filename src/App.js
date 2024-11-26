@@ -1,123 +1,189 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { counterAction } from "./Store";
-import Header from "./Components/Header";
-import Content from "./Components/Content";
-import Carousel from "./Components/Carousel";
-import Program from "./Components/Program";
-import TimeTable from "./TimeTable";
-import Facts from "./Facts";
-import Team from "./Team";
-import Testimonal from "./Testimonal";
-import Blog from "./Blog";
-import Footer from "./Footer";
-import About from "./Components/About";
-import Home from "./Components/Home";
-import '../src/lib/flaticon/font/flaticon.css';
+import DataTable from "react-data-table-component";
+
 function App() {
-  const { counterVal } = useSelector((store) => store.counter);
-  const { name } = useSelector((store) => store.counter);
-  useEffect(() => {
-    if (counterVal > 5) {
-      console.log(counterVal, "counterVal");
-    }
-  }, [counterVal]);
-  let [num, setNum] = useState(0);
+  const { userData } = useSelector((store) => store.counter);
   const dispatch = useDispatch();
-  const addPlus = () => {
-    dispatch(counterAction.increment(counterVal));
+
+  const [userDetails, setUserDetails] = useState({
+    name: "",
+    email: "",
+    address: "",
+    age: "",
+    fatherName: "",
+  });
+
+  const [editableRowId, setEditableRowId] = useState(null); // For tracking which row is being edited
+
+  useEffect(() => {
+    setUserDetails(userData);
+  }, [userData]);
+
+  // Handlers
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setUserDetails((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const minus = () => {
-    dispatch(counterAction.decrement(counterVal));
+  const handleSubmit = (e) => {
+    e.preventDefault();
+  
+    if (editableRowId !== null) {
+      // Update if in edit mode
+      dispatch(
+        counterAction.updateForm({
+          index: editableRowId,
+          updatedData: userDetails,
+        })
+      );
+    } else {
+      // Add new user if not editing
+      dispatch(counterAction.addForm(userDetails));
+    }
+  
+    resetForm();
   };
+  
+  const handleUpdate = (index) => {
+    setEditableRowId(index); // Set the row being edited
+    setUserDetails(userData[index]); // Load the existing data into the form
+  };
+  
+  const handleDelete = (index) => {
+    dispatch(counterAction.deleteForm(index)); // Dispatch the delete action
+  };
+  
+  const resetForm = () => {
+    setUserDetails({
+      name: "",
+      email: "",
+      address: "",
+      age: "",
+      fatherName: "",
+    });
+    setEditableRowId(null); // Exit edit mode
+  };
+  const handleClearData = () => {
+    dispatch(counterAction.clearData());
+  };
+
+  // Columns for the DataTable
+  const columns = [
+    {
+      name: "Name",
+      selector: (row) => row.name,
+      sortable: true,
+    },
+    {
+      name: "Email",
+      selector: (row) => row.email,
+    },
+    {
+      name: "Address",
+      selector: (row) => row.address,
+    },
+    {
+      name: "Age",
+      selector: (row) => row.age,
+    },
+    {
+      name: "Father's Name",
+      selector: (row) => row.fatherName,
+    },
+    {
+      name: "Actions",
+      cell: (row, index) => (
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button onClick={() => handleUpdate(index)}>Edit</button>
+          <button onClick={() => handleDelete(index)}>Delete</button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <>
-      {/* <div classNameName="App">
-        <header classNameName="App-header">
-          <img src={logo} classNameName="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <button onClick={addPlus}>count increce</button>
-          <button onClick={minus}>count decrease</button>
-          <input
-            type="number"
-            placeholder="entervalue"
-            onChange={(e) => setNum(e.target.value)}
-          />
-          <button onClick={() => dispatch(counterAction.add(num))}>Add</button>
-          <button onClick={() => dispatch(counterAction.subtract(num))}>
-            Substract
-          </button>
-          {counterVal} Raj
-          <label>Name :- </label>
-          <input
-            type="text"
-            name=""
-            id=""
-            value={name}
-            onChange={(e) =>
-              dispatch(counterAction.addName({ event: e.target.value }))
-            }
-          />
-        </header>
-      </div> */}
+      <div
+        className="user-form"
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+          backgroundColor: "#f5f5f5",
+        }}
+      >
+        <form onSubmit={handleSubmit}>
+          <h4>{editableRowId !== null ? "Edit User" : "Add User"}</h4>
+          <div>
+            <label>Name:</label>
+            <input
+              type="text"
+              name="name"
+              value={userDetails.name}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <label>Email:</label>
+            <input
+              type="email"
+              name="email"
+              value={userDetails.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <label>Address:</label>
+            <textarea
+              name="address"
+              value={userDetails.address}
+              onChange={handleChange}
+              required
+            ></textarea>
+          </div>
+          <div>
+            <label>Age:</label>
+            <input
+              type="number"
+              name="age"
+              value={userDetails.age}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <label>Father's Name:</label>
+            <input
+              type="text"
+              name="fatherName"
+              value={userDetails.fatherName}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <button type="submit">{editableRowId !== null ? "Update" : "Submit"}</button>
 
-      {/* <Home /> */}
-      {/* <!-- Header Start --> */}
-      <Header />
-      {/* <!-- Header End --> */}
 
-      {/* <!-- Carousel Start --> */}
-      <Carousel />
-      {/* <!-- Carousel End --> */}
-
-      {/* <!-- About Start --> */}
-      <About />
-      {/* <!-- About End --> */}
-
-      {/* <!-- Programe Start --> */}
-      <Program />
-      {/* <!-- Programe Start --> */}
-
-      {/* <!-- className Timetable Start --> */}
-      <TimeTable />
-      {/* <!-- className Timetable Start --> */}
-
-      {/* <!-- Facts Start --> */}
-      <Facts />
-      {/* <!-- Facts End --> */}
-
-      {/* <!-- Team Start --> */}
-      <Team />
-      {/* <!-- Team End --> */}
-
-      {/* <!-- Testimonial Start --> */}
-      <Testimonal />
-      {/* <!-- Testimonial End --> */}
-
-      {/* <!-- Blog Start --> */}
-      <Blog />
-      {/* <!-- Blog End --> */}
-
-      {/* <!-- Footer Start --> */}
-      <Footer />
-      {/* <!-- Footer End --> */}
-
-      {/* <!-- Back to Top --> */}
-      {/* <a href="#" className="btn btn-dark py-3 fs-4 back-to-top"><i className="bi bi-arrow-up"></i></a> */}
-
-      {/* <!-- JavaScript Libraries -->
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="lib/easing/easing.min.js"></script>
-    <script src="lib/waypoints/waypoints.min.js"></script>
-    <script src="lib/counterup/counterup.min.js"></script>
-    <script src="lib/owlcarousel/owl.carousel.min.js"></script>
-
-    <!-- Template Javascript --> */}
-      {/* <script src="js/main.js"></script> */}
+          <button onClick={handleClearData}>Clear All Data</button>
+        </form>
+      </div>
+      <h3 style={{ marginTop: "20px" }}>Submitted Details:</h3>
+      <DataTable
+        columns={columns}
+        data={userData}
+        pagination
+        highlightOnHover
+        theme="default"
+        style={{ width: "80%", marginTop: "20px" }}
+      />
     </>
   );
 }
